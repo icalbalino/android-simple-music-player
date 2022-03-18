@@ -1,16 +1,25 @@
 package com.example.androidsimplemusicplayer;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private double finalTime = 0;
     private boolean isPlaying = false;
     private Handler syncHandler = new Handler();
+    final static int MY_PERMISSIONS_REQUEST = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +46,27 @@ public class MainActivity extends AppCompatActivity {
         txtDisplayDuration = findViewById(R.id.display_duration);
         mediaPlayer = new MediaPlayer();
 
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                Toast.makeText(this, "EXPLANATION", Toast.LENGTH_LONG).show();
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST);
+                Toast.makeText(this, "EXPLANATION NO NEEDED", Toast.LENGTH_LONG).show();
+            }
+        }
+
         try {
-            AssetFileDescriptor afdObj = getAssets().openFd("ICan'tHelpFallingLoveWithYou.mp3");
-            mediaPlayer.setDataSource(afdObj.getFileDescriptor());
+            String filePath = Environment.getExternalStorageDirectory().getPath() + "/Music/titanic.mp3";
+            Log.d("Main", "PATH : " + filePath);
+            File file = new File(filePath);
+            Log.d("Main ", " Voice Exists : " + file.exists() + " Can Read : " + file.canRead());
+            mediaPlayer = MediaPlayer.create(this, Uri.parse(filePath));
             mediaPlayer.prepare();
             Toast.makeText(this, "Tekan tombol play untuk memutar lagu", Toast.LENGTH_SHORT).show();
         }
